@@ -13,7 +13,7 @@
 
 ## MAIN FILES
 
-- 'lab3.sv' is the main alarm clock design file
-- 'dflip.sv' contains the D Flip-Flop
-- 'lab_counter.sv' is the n-bit loop counter
-- 'lab1_b.sv' is the HEX display decoder
+- `lab3.sv` is the main alarm clock design file
+- `dflip.sv` contains the D Flip-Flop
+- `lab_counter.sv` is the n-bit loop counter
+- `lab1_b.sv` is the HEX display decoder
