@@ -23,23 +23,18 @@ logic [3:0] S2; // output of ones [-,-,-,x]
 logic [3:0] S3; // output of tens [-,-,x,-]
 logic [3:0] S4; // output of hundreds [-,x,-,-]
 logic [3:0] S5; // output of thousands [x,-,-,-]
-logic [5-1:0] SA; // for hour calculation
+logic [4:0] SA; // for hour calculation
 
 logic [3:0] A2; // FOR ALARM output of ones [-,-,-,x]
 logic [3:0] A3; // FOR ALARM output of tens [-,-,x,-]
 logic [3:0] A4; // FOR ALARM output of hundreds [-,x,-,-]
 logic [3:0] A5; // FOR ALARM output of thousands [x,-,-,-]
-logic [5-1:0] AA; // ALARM for hour calculation
+logic [4:0] AA; // ALARM for hour calculation
 
 logic [3:0] B2; // FOR ALARM output of ones [-,-,-,x]
 logic [3:0] B3; // FOR ALARM output of tens [-,-,x,-]
 logic [3:0] B4; // FOR ALARM output of hundreds [-,x,-,-]
 logic [3:0] B5; // FOR ALARM output of thousands [x,-,-,-]
-
-logic [5-1:0] A2_r; // FOR ALARM output of ones [-,-,-,x]
-logic [5-1:0] A3_r; // FOR ALARM output of tens [-,-,x,-]
-logic [5-1:0] A4_r; // FOR ALARM output of hundreds [-,x,-,-]
-logic [5-1:0] A5_r; // FOR ALARM output of thousands [x,-,-,-]
 
 logic [3:0] H2; // HEX DISPLAY output of ones [-,-,-,x]
 logic [3:0] H3; // HEX DISPLAY output of tens [-,-,x,-]
@@ -142,42 +137,13 @@ lab_counter #(24) hour_AL (.dec( 1'b0 ),
 assign A4 = AA % 10; //Calculations
 assign A5 = ( (AA - A4) / 10 );
 
-assign B2 = !(KEY0) ? '0 : A2;
-assign B3 = !(KEY0) ? '0 : A3;
-assign B4 = !(KEY0) ? '0 : A4;
-assign B5 = !(KEY0) ? '0 : A5;
+assign {B2,B3,B4,B5} = !(KEY0) ? '0 : {A2,A3,A4,A5};	
 
 // End of Alarm Stuff
 
 // Switch between Alarm and Normal:
 
-always_comb begin
-	unique case (SW2 && !SW1)
-		1'b1 : H2 = B2;
-		default : H2 = S2;
-	endcase
-end
-
-always_comb begin
-	unique case (SW2 && !SW1)
-		1'b1 : H3 = B3;
-		default : H3 = S3;
-	endcase
-end
-		
-always_comb begin
-	unique case (SW2 && !SW1)
-		1'b1 : H4 = B4;
-		default : H4 = S4;
-	endcase
-end
-		
-always_comb begin
-	unique case (SW2 && !SW1)
-		1'b1 : H5 = B5;
-		default : H5 = S5;
-	endcase
-end
+assign {H2,H3,H4,H5} = (SW2 && !SW1) ? {B2,B3,B4,B5} : {S2,S3,S4,S5};	
 		
 // End of switch
 		
