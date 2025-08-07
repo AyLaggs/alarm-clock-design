@@ -19,32 +19,32 @@ module lab3
 			
 logic [27-1:0] S1; // output of million counter
 
-logic [4-1:0] S2; // output of ones [-,-,-,x]
-logic [3-1:0] S3; // output of tens [-,-,x,-]
-logic [4-1:0] S4; // output of hundreds [-,x,-,-]
-logic [2-1:0] S5; // output of thousands [x,-,-,-]
+logic [3:0] S2; // output of ones [-,-,-,x]
+logic [3:0] S3; // output of tens [-,-,x,-]
+logic [3:0] S4; // output of hundreds [-,x,-,-]
+logic [3:0] S5; // output of thousands [x,-,-,-]
 logic [5-1:0] SA; // for hour calculation
 
-logic [5-1:0] A2; // FOR ALARM output of ones [-,-,-,x]
-logic [5-1:0] A3; // FOR ALARM output of tens [-,-,x,-]
-logic [5-1:0] A4; // FOR ALARM output of hundreds [-,x,-,-]
-logic [5-1:0] A5; // FOR ALARM output of thousands [x,-,-,-]
+logic [3:0] A2; // FOR ALARM output of ones [-,-,-,x]
+logic [3:0] A3; // FOR ALARM output of tens [-,-,x,-]
+logic [3:0] A4; // FOR ALARM output of hundreds [-,x,-,-]
+logic [3:0] A5; // FOR ALARM output of thousands [x,-,-,-]
 logic [5-1:0] AA; // ALARM for hour calculation
 
-logic [4-1:0] B2; // FOR ALARM output of ones [-,-,-,x]
-logic [3-1:0] B3; // FOR ALARM output of tens [-,-,x,-]
-logic [4-1:0] B4; // FOR ALARM output of hundreds [-,x,-,-]
-logic [2-1:0] B5; // FOR ALARM output of thousands [x,-,-,-]
+logic [3:0] B2; // FOR ALARM output of ones [-,-,-,x]
+logic [3:0] B3; // FOR ALARM output of tens [-,-,x,-]
+logic [3:0] B4; // FOR ALARM output of hundreds [-,x,-,-]
+logic [3:0] B5; // FOR ALARM output of thousands [x,-,-,-]
 
 logic [5-1:0] A2_r; // FOR ALARM output of ones [-,-,-,x]
 logic [5-1:0] A3_r; // FOR ALARM output of tens [-,-,x,-]
 logic [5-1:0] A4_r; // FOR ALARM output of hundreds [-,x,-,-]
 logic [5-1:0] A5_r; // FOR ALARM output of thousands [x,-,-,-]
 
-logic [4-1:0] H2; // HEX DISPLAY output of ones [-,-,-,x]
-logic [3-1:0] H3; // HEX DISPLAY output of tens [-,-,x,-]
-logic [4-1:0] H4; // HEX DISPLAY output of hundreds [-,x,-,-]
-logic [2-1:0] H5; // HEX DISPLAY output of thousands [x,-,-,-]
+logic [3:0] H2; // HEX DISPLAY output of ones [-,-,-,x]
+logic [3:0] H3; // HEX DISPLAY output of tens [-,-,x,-]
+logic [3:0] H4; // HEX DISPLAY output of hundreds [-,x,-,-]
+logic [3:0] H5; // HEX DISPLAY output of thousands [x,-,-,-]
 
 logic T1; // 120x speed
 logic TC1; // are we changing time or is it changing on its own (specifically for ones)
@@ -73,36 +73,21 @@ lab_counter #(100000000) one_meg (.inc(1'b1),
 
 assign T1 = (((S1 == 27'd0) || (S1 == 27'd24000000) || (S1 == 27'd49000000) || (S1 == 27'd74000000)) ? 1'b1 : 1'b0); //half second speed
 											 
-always_comb begin //choose speed
-	unique case (SW4)
-		1'b1 : new_clk = T1; 
-		default: new_clk = (((S1 == 27'd0) || (S1 == 27'd49000000)) ? 1'b1 : 1'b0); //every second
-	endcase
-end
-
+assign new_clk = SW4 ? T1 : ((S1 == 27'd0) || (S1 == 27'd49000000));	
+	
 // Normal Time :
 
-always_comb begin
-	unique case (SW1 && !SW2) // change time or let time run
-		1'b1 : TC1 = ( !(KEY2) && new_clk ); // depends on key
-		default: TC1 = (new_clk); // run on its own
-	endcase
-end
-
+assign TC1 = (SW1 && !SW2) ? ( !(KEY2) && new_clk ) : (new_clk);	
+	
 lab_counter #(10) ones (.dec(1'b0), 
 								.inc( TC1 ), 
 								.clk(clk), 
 								.rst(SW0), 
 								.cnt(S2));
 
-always_comb begin
-	unique case (SW1 && !SW2) // change time or let time run
-		1'b1 : TC2 = ( !(KEY2) && tens_clk && new_clk ); // depends on key
-		default: TC2 = ( tens_clk && new_clk ); // run on its own
-	endcase
-end
+assign TC2 = (SW1 && !SW2) ? ( !(KEY2) && tens_clk && new_clk ) : ( tens_clk && new_clk ); //depend on key or run on its own	
 
-assign tens_clk = (((S2 == 4'd9)) ? 1'b1 : 1'b0); // if ones is 9, clock tens
+assign tens_clk = (S2 == 4'd9); // if ones is 9, clock tens
 
 lab_counter #(6) tens ( .dec(1'b0), 
 								.inc( TC2 ), 
@@ -110,15 +95,9 @@ lab_counter #(6) tens ( .dec(1'b0),
 								.rst(SW0), 
 								.cnt(S3));
 
+assign TC3 = (SW1 && !SW2) ? ( !(KEY3) && new_clk ) : ( new_clk && hour_clk && tens_clk );	
 
-always_comb begin
-	unique case (SW1 && !SW2) // change time or let time run
-		1'b1 : TC3 = ( !(KEY3) && new_clk ); // depends on key
-		default: TC3 = ( new_clk && hour_clk && tens_clk ); // run on its own
-	endcase
-end
-
-assign hour_clk = (((S3 == 3'd5) && (S2 == 4'd9)) ? 1'b1 : 1'b0); // if ones is 9 and tens is 5, clock hour
+assign hour_clk = ((S3 == 3'd5) && (S2 == 4'd9)); // if ones is 9 and tens is 5, clock hour
 
 lab_counter #(24) hour (.dec( 1'b0 ), 
 								.inc( TC3 ), 
@@ -141,7 +120,7 @@ lab_counter #(10) ones_AL (.dec(1'b0),
 									.rst(SW0), 
 									.cnt(A2));
 
-assign tens_clk_AL = (((A2 == 4'd9)) ? 1'b1 : 1'b0); // if ones is 9, clock tens
+assign tens_clk_AL = (A2 == 4'd9); // if ones is 9, clock tens
 									
 
 assign L2 = ( !(KEY2) && tens_clk_AL && new_clk ); // depends on key
@@ -217,11 +196,6 @@ assign LED9 = ( (S1 < 25000000) || (S1 > 50000000 && S1 < 75000000) ); // clocks
 
 dflip #(1) ff1 ( .d(AL_old), .clk(clk), .rst(SW0), .en(!(KEY0) || (AL_old)), .q(AL));
 
-always_comb begin
-	unique case (AL)
-		1'b1 : LED7 = LED9;
-		default : LED7 = '0;
-	endcase
-end
+assign LED7 = AL ? LED9 : '0;	
 							  
 endmodule
